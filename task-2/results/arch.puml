@@ -1,0 +1,28 @@
+@startuml Дизайн модуля пакетной обработки данных
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+    title Дизайн модуля пакетной обработки данных
+
+    Person(user, "Data Engineer\Developer")
+    
+    System_Boundary(k8s, "Cloud Kubernetes Cluster") {
+        
+        Container(web, "Airflow UI",  "Визуализация пайплайнов и просмотр логов")
+        
+        Boundary(worker_group, "Workers\Scheduler") {
+            Container(worker, "Airflow Worker Pod", "Python/Docker", "Выполняет чтение из Postgres и пишет в S3 csv.")
+        }
+
+        ContainerDb(price_db, "Price data DB", "БД прайс-листов", "Хранит всю необходимую инф-ию.")
+    }
+     
+     System_Ext(s3, "Cloud Storage S3 ", "Хранение результатов обработки(csv файлов)")
+
+
+    Rel(user, web, "Просмотр UI")
+    Rel(web, worker, "Настройка")
+    Rel(worker, price_db, "sql запрос" )
+    Rel(worker, s3, "Хранение csv-файлов")
+
+@enduml
