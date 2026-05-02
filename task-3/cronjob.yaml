@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-exporter
+spec:
+  schedule: "*/5 * * * *" # Запуск каждые 5 минут
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: exporter
+            image: my-exporter:v1 # Ваш собранный образ
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: DATABASE_URL
+              value: "postgresql://test:test@postgres-service:5432/shipment_db"
+            - name: TABLE_NAME
+              value: "shipment.clients"
+            volumeMounts:
+            - name: export-volume
+              mountPath: /data
+          volumes:
+          - name: export-volume
+            hostPath:
+              path: /tmp/k8s-exports # Данные сохранятся на хосте MiniKube
+          restartPolicy: OnFailure

@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+data:
+  init.sql: |
+    CREATE SCHEMA IF NOT EXISTS shipment;
+    CREATE TABLE shipment.clients (id SERIAL PRIMARY KEY, name TEXT, email TEXT);
+    INSERT INTO shipment.clients  (name, email) VALUES ('Ivan', 'ivan@example.com'), ('Anna', 'anna@example.com');
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13
+          env:
+            - name: POSTGRES_USER
+              value: "test"
+            - name: POSTGRES_PASSWORD
+              value: "test"
+            - name: POSTGRES_DB
+              value: "shipment_db"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: init-db
+              mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+        - name: init-db
+          configMap:
+            name: postgres-init-script
