@@ -11,6 +11,8 @@ services:
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
 
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
@@ -54,7 +56,9 @@ services:
       test: 'curl -f http://localhost:5601 || exit 1'
 
   filebeat:
-    build: 'filebeat'
+    build: 
+      context: ./filebeat  
+      dockerfile: Dockerfile
     container_name: 'filebeat'
     restart: 'unless-stopped'
     volumes:
@@ -93,10 +97,12 @@ services:
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    ports:
+      - "8080:8080"  
+    restart: 'unless-stopped'

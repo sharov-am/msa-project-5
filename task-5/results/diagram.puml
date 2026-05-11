@@ -1,0 +1,48 @@
+@startuml
+
+
+
+actor "Пользователь" as User
+actor "Администратор" as Admin
+
+package "Google Cloud Platform (GCP)" {
+
+
+    component [Монолитный Сервис] as Monolith
+    component [K8s CronJob] as CronJob
+    component [Spring Batch Job] as BatchJob
+    component [GCS\S3] as S3
+
+    database "PostgreSQL" as DB
+
+    package "Monitoring & Logging" {
+        component [Prometheus] as Prom
+        component [Grafana] as Grafana
+        component [ELK Stack] as ELK
+    }
+
+
+}
+
+' Взаимодействия
+User --> Monolith : HTTP/REST
+Monolith --> CronJob : Trigger (API/CLI)
+CronJob --> BatchJob : Запуск пода
+BatchJob --> DB : Чтение/Запись данных
+BatchJob --> S3 : Чтение/Запись csv файлов
+
+' Логирование в ELK
+Monolith --> ELK : Logs (Filebeat/Logstash)
+BatchJob --> ELK : Logs (Filebeat/Logstash)
+
+' Метрики в Prometheus
+Monolith -- Prom : Scrape (/actuator/prometheus)
+BatchJob -- Prom : Push (Pushgateway)
+Prom --> Grafana : Data Source
+
+' Администрирование
+Admin --> Grafana : Просмотр дашбордов
+Grafana --> Admin : Оповещения(alerting)
+
+
+@endum
