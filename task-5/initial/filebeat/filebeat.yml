@@ -22,6 +22,12 @@ processors:
   - drop_fields:
       # drop the fields below in order to have a cleaner
       fields: ["container.labels.io_buildpacks_build_metadata", "container.labels.io_buildpacks_lifecycle_metadata", "container.labels.io_buildpacks_stack_id"]
+  - drop_event:
+      when:
+        not:
+          contains:
+            container.image.name: "batch-processing"
+
 
 filebeat.config.modules:
   path: ${path.config}/modules.d/*.yml

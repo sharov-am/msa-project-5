@@ -1,0 +1,59 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: group1
+      folder: default
+      interval: 5m
+      rules:
+        - uid: aflrht09g8uf4d
+          title: Lots of failed job processings
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: PBFA97CFB590B2093
+              model:
+                editorMode: code
+                expr: "(sum(increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[1h])) \n/ \nsum(increase(spring_batch_job_seconds_count[1h]))) * 100"
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 90
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 5m
+          annotations:
+            summary: Issues with job processing, less then half is completed.
+          labels: {}
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-email
